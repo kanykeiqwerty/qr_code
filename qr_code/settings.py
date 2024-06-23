@@ -37,10 +37,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+
     # my_apps
-    'main',
+    
     'accounts',
+    'main',
+    'tips',
+    
 ]
+
+STRIPE_SECRET_KEY = 'your_secret_key'
+STRIPE_PUBLISHABLE_KEY = 'your_publishable_key'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -78,14 +87,30 @@ WSGI_APPLICATION = 'qr_code.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'tips_db',
+        'USER': 'tips_user',
+        'PASSWORD': '1',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
 
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
