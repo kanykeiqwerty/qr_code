@@ -1,8 +1,12 @@
+from io import BytesIO
 import uuid
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
+import qrcode
+from stripe import File
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -37,7 +41,7 @@ class CustomUser(AbstractUser):
         ('waiter', 'Waiter'),
         ('client', 'Client'),
     )
-
+    username=None
     email = models.EmailField('email address', unique=True)
     password = models.CharField(max_length=100)
     activation_code = models.CharField(max_length=255, blank=True)
@@ -68,17 +72,26 @@ class WaiterProfile(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     workplace = models.CharField(max_length=255)
-    wallet = models.CharField(max_length=255, blank=True, null=True)
-    payment_method = models.CharField(max_length=255, blank=True, null=True)
+    # wallet = models.CharField(max_length=255, blank=True, null=True)
+    # payment_method = models.CharField(max_length=255, blank=True, null=True)
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
+    def save(self, *args, **kwargs):
+        qr_content = f"{settings.SITE_URL}/make-tip/{self.user.id}/"
+        qr_image = qrcode.make(qr_content)
+        qr_offset = BytesIO()
+        qr_image.save(qr_offset, format='PNG')
+        qr_file_name = f"{self.user.id}_qrcode.png"
+        self.qr_code.save(qr_file_name, File(qr_offset), save=False)
+        super().save(*args, **kwargs)
 
 class ClientProfile(models.Model):
     user = models.OneToOneField('accounts.CustomUser', on_delete=models.CASCADE, primary_key=True)
     nickname = models.CharField(max_length=100, unique=True)
-    payment_method = models.CharField(max_length=255, blank=True, null=True)
+    # payment_method = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.nickname

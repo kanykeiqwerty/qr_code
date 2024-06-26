@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -13,10 +14,13 @@ from qr_code.serializers import WaiterProfileSerializer, ClientProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from io import BytesIO
 import qrcode
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.core.files import File
 import stripe
 
-from django.contrib.auth import get_user_model
+
+# from django.contrib.auth import get_user_model
 
 # Устанавливаем секретный ключ для работы со Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -117,29 +121,65 @@ class ClientProfileView(generics.RetrieveUpdateAPIView):
             user.save()
 
 class AttachPaymentMethodView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, user_id):
-        # Находим пользователя по его идентификатору
-        user = get_object_or_404(CustomUser, id=user_id)
-        # Получаем идентификатор платежного метода из запроса
+    def post(self, request):
+        user = request.user
         payment_method_id = request.data.get('payment_method_id')
 
-        # Привязываем платежный метод к клиенту Stripe
-        stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=user.stripe_customer_id,
-        )
+        try:
+            stripe.PaymentMethod.attach(payment_method_id, customer=user.stripe_customer_id)
+            user.payment_method_id = payment_method_id
+            user.save()
+            return Response({"status": "success"}, status=status.HTTP_200_OK)
+        except stripe.error.StripeError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Если пользователь является официантом, сохраняем платежный метод в его профиль
-        if user.is_waiter:
-            waiter_profile = WaiterProfile.objects.get(user=user)
-            waiter_profile.payment_method = payment_method_id
-            waiter_profile.save()
-        # Если пользователь является клиентом, сохраняем платежный метод в его профиль
-        else:
-            client_profile = ClientProfile.objects.get(user=user)
-            client_profile.payment_method = payment_method_id
-            client_profile.save()
+@csrf_exempt
+@login_required
+def make_tip(request, waiter_id):
+    if request.method == 'POST':
+        client = request.user.clientprofile
+        waiter = get_object_or_404(WaiterProfile, user_id=waiter_id)
+        amount = float(request.POST.get('amount'))
 
-        return Response({"status": "success"}, status=status.HTTP_200_OK)
+        try:
+            # Создание платежного намерения
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(amount * 100),
+                currency='usd',
+                payment_method=client.user.payment_method_id,
+                customer=client.user.stripe_customer_id,
+                confirm=True,
+                transfer_data={
+                    'destination': waiter.user.payment_method_id,
+                },
+            )
+            # Создание записи о чаевых
+            Tip.objects.create(
+                waiter=waiter,
+                client=client,
+                amount=amount
+            )
+            return Response({"status": "success"}, status=status.HTTP_200_OK)
+        except stripe.error.StripeError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+@login_required
+def profile_view(request):
+    user = request.user
+    if user.user_type == 'waiter':
+        profile = WaiterProfile.objects.get(user=user)
+        data = {
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
+            "workplace": profile.workplace,
+            "qr_code": profile.qr_code.url if profile.qr_code else None
+        }
+    elif user.user_type == 'client':
+        profile = ClientProfile.objects.get(user=user)
+        data = {
+            "nickname": profile.nickname,
+            "payment_method_id": user.payment_method_id,
+        }
+    return JsonResponse(data)

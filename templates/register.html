@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - BakaiBank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>BakaiBank</h1>
+    </header>
+    <main>
+        <section id="auth-content">
+            <h2>Register</h2>
+            <form id="register-form">
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="password2" placeholder="Confirm Password" required>
+                <select name="user_type">
+                    <option value="client">Client</option>
+                    <option value="waiter">Waiter</option>
+                </select>
+                <button type="submit">Register</button>
+            </form>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 BakaiBank</p>
+    </footer>
+    <script src="{% static 'js/auth.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiter Profile - BakaiBank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>BakaiBank</h1>
+    </header>
+    <main>
+        <section id="profile-content">
+            <h2>Waiter Profile</h2>
+            <p>First Name: {{ profile.first_name }}</p>
+            <p>Last Name: {{ profile.last_name }}</p>
+            <p>Workplace: {{ profile.workplace }}</p>
+            <p>QR Code: <img src="{{ profile.qr_code.url }}" alt="QR Code"></p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 BakaiBank</p>
+    </footer>
+    <script src="{% static 'js/profile_waiter.js' %}"></script>
+</body>
+</html>

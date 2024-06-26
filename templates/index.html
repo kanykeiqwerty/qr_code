@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BakaiBank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>BakaiBank</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'register' %}">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="main-content">
+            <h2>Welcome to BakaiBank</h2>
+            <p>Choose your role:</p>
+            <button id="client-button">Client</button>
+            <button id="waiter-button">Waiter</button>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Bakaibank</p>
+    </footer>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('client-button').addEventListener('click', function() {
+                window.location.href = '{% url "register" %}?user_type=client';
+            });
+            document.getElementById('waiter-button').addEventListener('click', function() {
+                window.location.href = '{% url "register" %}?user_type=waiter';
+            });
+        });
+    </script>
+</body>
+</html>

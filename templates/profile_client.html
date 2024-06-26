@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Profile - BakaiBank</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>BakaiBank</h1>
+    </header>
+    <main>
+        <section id="profile-content">
+            <h2>Client Profile</h2>
+            <p>Nickname: {{ profile.nickname }}</p>
+            <p>Payment Method: {{ profile.payment_method_id }}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 BakaiBank</p>
+    </footer>
+    <script src="{% static 'js/profile_client.js' %}"></script>
+</body>
+</html>

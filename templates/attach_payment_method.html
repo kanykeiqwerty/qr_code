@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attach Payment Method - NetMonet</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1>NetMonet</h1>
+    </header>
+    <main>
+        <section id="attach-payment-method">
+            <h2>Attach Payment Method</h2>
+            <form id="attach-payment-form">
+                <input type="text" id="card-element" placeholder="Enter your card details">
+                <button type="submit">Attach Payment Method</button>
+            </form>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 NetMonet</p>
+    </footer>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stripe = Stripe('{{ stripe_public_key }}');
+            const elements = stripe.elements();
+            const card = elements.create('card');
+            card.mount('#card-element');
+
+            document.getElementById('attach-payment-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const { paymentMethod, error } = await stripe.createPaymentMethod('card', card);
+                if (error) {
+                    console.error(error);
+                } else {
+                    fetch('/api/attach-payment-method/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                        },
+                        body: JSON.stringify({ payment_method_id: paymentMethod.id })
+                    }).then(response => response.json())
+                      .then(data => console.log(data))
+                      .catch(error => console.error(error));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
