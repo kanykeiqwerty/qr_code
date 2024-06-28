@@ -1,145 +1,113 @@
-from django.conf import settings
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
+from django.db import IntegrityError
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
-
-from accounts.send_email import send_confirmation_email
-from qr_code import serializers
-from .models import CustomUser, WaiterProfile, ClientProfile
-from tips.models import Tip
-from qr_code.serializers import WaiterProfileSerializer, ClientProfileSerializer, TipSerializer, RegisterSerializer, LoginSerializer, LogoutSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
-from io import BytesIO
-import qrcode
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.core.files import File
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse, HttpResponse
+from .models import CustomUser, WaiterProfile, ClientProfile, Tip
+from .forms import WaiterProfileForm, ClientProfileForm, PaymentMethodForm
+from .serializers import RegisterSerializer, LoginSerializer
 import stripe
+from django.conf import settings
 
-
-# from django.contrib.auth import get_user_model
-
-# Устанавливаем секретный ключ для работы со Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-
-
-
-class RegistrationView(APIView):
-    permission_classes = (permissions.AllowAny,)
+class RegisterView(APIView):
+    def get(self, request):
+        role = request.GET.get('role', 'client')
+        return render(request, 'register.html', {'role': role})
 
     def post(self, request):
-        serializer = serializers.RegisterSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
             user = serializer.save()
-            if user:
-                send_confirmation_email(user)
-            return Response(serializer.data, status=201)
-        return Response(status=400)
+            if user.user_type == 'waiter':
+                request.session['user_id'] = str(user.id)
+                return redirect('complete-waiter-profile')
+            else:
+                return redirect('edit-client-profile')
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class CompleteWaiterProfileView(APIView):
+    @method_decorator(login_required)
+    def get(self, request):
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return redirect('login')
+        user = get_object_or_404(CustomUser, id=user_id)
+        profile, created = WaiterProfile.objects.get_or_create(user=user)
+        form = WaiterProfileForm(instance=profile)
+        return render(request, 'complete_waiter_profile.html', {'form': form})
 
-class ActivationView(APIView):
-    permission_classes = (permissions.AllowAny,)
-
-    def get(self, request, activation_code):
-        try:
-            user = CustomUser.objects.get(activation_code=activation_code)
-            user.is_active = True
-            user.activation_code = ''
-            user.save()
-            return Response({
-                'msg': 'Successfully activated!'},
-                status=200)
-        except CustomUser.DoesNotExist:
-            return Response(
-                {'msg': 'Link expired!'},
-                status=400
-            )
-
+    @method_decorator(login_required)
+    def post(self, request):
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return redirect('login')
+        user = get_object_or_404(CustomUser, id=user_id)
+        profile = WaiterProfile.objects.get(user=user)
+        form = WaiterProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('waiter-profile')
+        return render(request, 'complete_waiter_profile.html', {'form': form})
 
 class LoginApiView(TokenObtainPairView):
-    serializer_class = serializers.LoginSerializer
+    serializer_class = LoginSerializer
 
-
-class LogoutApiView(generics.GenericAPIView):
-    serializer_class = serializers.LogoutSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def post(self, request, *args):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response('Successfully loged out', status=204)
-
-
-class WaiterProfileView(generics.RetrieveUpdateAPIView):
-    queryset = WaiterProfile.objects.all()
-    serializer_class = WaiterProfileSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def get_object(self):
-        # Получаем идентификатор пользователя из запроса
-        user_id = self.request.query_params.get('user_id')
-        # Находим профиль официанта по идентификатору пользователя
-        return get_object_or_404(WaiterProfile, user_id=user_id)
-
-    def perform_update(self, serializer):
-        # Сохраняем обновленный профиль официанта
-        waiter = serializer.save()
-        # Генерируем QR-код, который будет содержать ссылку на страницу чаевых
-        qr_code_img = qrcode.make(f'https://your-site.com/tip/{waiter.id}/')
-        buffer = BytesIO()
-        qr_code_img.save(buffer)
-        waiter.qr_code.save(f'qr_{waiter.id}.png', File(buffer), save=False)
-        waiter.save()
-
-class ClientProfileView(generics.RetrieveUpdateAPIView):
-    queryset = ClientProfile.objects.all()
-    serializer_class = ClientProfileSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def get_object(self):
-        # Получаем идентификатор пользователя из запроса
-        user_id = self.request.query_params.get('user_id')
-        # Находим профиль клиента по идентификатору пользователя
-        return get_object_or_404(ClientProfile, user_id=user_id)
-
-    def perform_update(self, serializer):
-        # Сохраняем обновленный профиль клиента
-        client = serializer.save()
-        user = client.user
-        # Если у пользователя еще нет идентификатора клиента Stripe, создаем его
-        if not user.stripe_customer_id:
-            stripe_customer = stripe.Customer.create(
-                email=user.email,
-                name=user.username
-            )
-            user.stripe_customer_id = stripe_customer['id']
-            user.save()
-
-class AttachPaymentMethodView(APIView):
-    def post(self, request):
+@method_decorator(login_required, name='dispatch')
+class ProfileView(APIView):
+    def get(self, request):
         user = request.user
-        payment_method_id = request.data.get('payment_method_id')
+        if user.user_type == 'waiter':
+            profile = WaiterProfile.objects.get(user=user)
+            return render(request, 'waiter_profile.html', {'profile': profile})
+        elif user.user_type == 'client':
+            profile = ClientProfile.objects.get(user=user)
+            return render(request, 'client_profile.html', {'profile': profile})
+        return HttpResponse(status=404)
 
-        try:
-            stripe.PaymentMethod.attach(payment_method_id, customer=user.stripe_customer_id)
-            user.payment_method_id = payment_method_id
-            user.save()
-            return Response({"status": "success"}, status=status.HTTP_200_OK)
-        except stripe.error.StripeError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+@method_decorator(login_required, name='dispatch')
+class EditClientProfileView(APIView):
+    def get(self, request):
+        profile, created = ClientProfile.objects.get_or_create(user=request.user)
+        form = ClientProfileForm(instance=profile)
+        return render(request, 'edit_client_profile.html', {'form': form})
 
-@csrf_exempt
-@login_required
-def make_tip(request, waiter_id):
-    if request.method == 'POST':
+    def post(self, request):
+        profile = ClientProfile.objects.get(user=request.user)
+        form = ClientProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            try:
+                form.save()
+                return redirect('profile')
+            except IntegrityError:
+                form.add_error('nickname', 'Этот никнейм уже используется.')
+        return render(request, 'edit_client_profile.html', {'form': form})
+
+@method_decorator(login_required, name='dispatch')
+class AttachPaymentMethodView(APIView):
+    def get(self, request):
+        form = PaymentMethodForm()
+        return render(request, 'attach_payment_method.html', {'form': form})
+
+    def post(self, request):
+        form = PaymentMethodForm(request.POST)
+        if form.is_valid():
+            request.user.payment_method_id = form.cleaned_data['payment_method_id']
+            request.user.save()
+            return redirect('profile')
+        return render(request, 'attach_payment_method.html', {'form': form})
+
+@method_decorator(login_required, name='dispatch')
+class MakeTipView(APIView):
+    def post(self, request, waiter_id):
         client = request.user.clientprofile
         waiter = get_object_or_404(WaiterProfile, user_id=waiter_id)
-        amount = float(request.POST.get('amount'))
+        amount = float(request.data.get('amount'))
 
         try:
             # Создание платежного намерения
@@ -162,24 +130,3 @@ def make_tip(request, waiter_id):
             return Response({"status": "success"}, status=status.HTTP_200_OK)
         except stripe.error.StripeError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
-
-
-@login_required
-def profile_view(request):
-    user = request.user
-    if user.user_type == 'waiter':
-        profile = WaiterProfile.objects.get(user=user)
-        data = {
-            "first_name": profile.first_name,
-            "last_name": profile.last_name,
-            "workplace": profile.workplace,
-            "qr_code": profile.qr_code.url if profile.qr_code else None
-        }
-    elif user.user_type == 'client':
-        profile = ClientProfile.objects.get(user=user)
-        data = {
-            "nickname": profile.nickname,
-            "payment_method_id": user.payment_method_id,
-        }
-    return JsonResponse(data)

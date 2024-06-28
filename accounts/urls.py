@@ -1,20 +1,15 @@
 from django.urls import path
-from .views import WaiterProfileView, ClientProfileView, AttachPaymentMethodView, LoginApiView, LogoutApiView, ActivationView, RegistrationView, make_tip, profile_view
-
-# from main.views import UserRegistrationView
-from tips.views import TipView, WaiterTipHistoryView, ClientTipHistoryView
+from .views import RegisterView, LoginApiView, ProfileView, MakeTipView, CompleteWaiterProfileView, EditClientProfileView, AttachPaymentMethodView
+# from django.urls import reverse
+# app_name='accounts'
 urlpatterns = [
-    path('register/', RegistrationView.as_view(), name='register'),
-    path('activate/<str:activation_code>/', ActivationView.as_view(), name='activate'),
+    path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginApiView.as_view(), name='login'),
-    path('logout/', LogoutApiView.as_view(), name='logout'),
-    # path('waiter/profile/', WaiterProfileView.as_view(), name='waiter-profile'),
-    # path('client/profile/', ClientProfileView.as_view(), name='client-profile'),
-    # path('tip/', TipView.as_view(), name='tip'),
-    # path('waiter/tips/', WaiterTipHistoryView.as_view(), name='waiter-tips'),
-    # path('client/tips/', ClientTipHistoryView.as_view(), name='client-tips'),
-   
+    path('profile/', ProfileView.as_view(), name='profile'),
+    path('make-tip/<uuid:waiter_id>/', MakeTipView.as_view(), name='make-tip'),
+    path('complete-waiter-profile/', CompleteWaiterProfileView.as_view(), name='complete-waiter-profile'),
+    path('edit-client-profile/', EditClientProfileView.as_view(), name='edit-client-profile'),
     path('attach-payment-method/', AttachPaymentMethodView.as_view(), name='attach-payment-method'),
-    path('make-tip/<int:waiter_id>/', make_tip, name='make_tip'),
-    path('profile/', profile_view, name='profile'),
+    path('waiter-profile/', ProfileView.as_view(), name='waiter-profile'),
 ]
+# print(reverse('accounts:waiter_profile'))

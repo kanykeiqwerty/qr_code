@@ -3,41 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BakaiBank</title>
+    <title>BAKAIBANK</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body>
+<body style="background-color: rgb(43, 59, 117); display: flex; justify-content: center; align-items: center; height: 100vh;">
     <header>
-        <h1>BakaiBank</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'login' %}">Login</a></li>
-                <li><a href="{% url 'register' %}">Register</a></li>
-            </ul>
-        </nav>
+        <h1 style="text-align: center;">BAKAIBANK</h1>
     </header>
-    <main>
-        <section id="main-content">
-            <h2>Welcome to BakaiBank</h2>
-            <p>Choose your role:</p>
-            <button id="client-button">Client</button>
-            <button id="waiter-button">Waiter</button>
-        </section>
+    <main style="text-align: center;">
+        <h2>Выберите действие и роль:</h2>
+        <div style="margin-top: 20px;">
+            <button onclick="window.location.href='/accounts/register/?role=waiter'" style="margin: 10px; padding: 10px 20px;">Зарегистрироваться как Официант</button>
+            <button onclick="window.location.href='/accounts/register/?role=client'" style="margin: 10px; padding: 10px 20px;">Зарегистрироваться как Клиент</button>
+            <button onclick="window.location.href='/accounts/login/?role=waiter'" style="margin: 10px; padding: 10px 20px;">Войти как Официант</button>
+            <button onclick="window.location.href='/accounts/login/?role=client'" style="margin: 10px; padding: 10px 20px;">Войти как Клиент</button>
+        </div>
     </main>
-    <footer>
-        <p>&copy; 2023 Bakaibank</p>
-    </footer>
-    <script src="{% static 'js/main.js' %}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('client-button').addEventListener('click', function() {
-                window.location.href = '{% url "register" %}?user_type=client';
-            });
-            document.getElementById('waiter-button').addEventListener('click', function() {
-                window.location.href = '{% url "register" %}?user_type=waiter';
-            });
-        });
-    </script>
 </body>
 </html>

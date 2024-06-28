@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attach Payment Method</title>
+    <title>Client Profile</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body style="background-color: lightblue;">
+<body>
     <header>
-        <h1>Attach Payment Method</h1>
+        <h1>Client Profile</h1>
     </header>
     <main>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Save</button>
-        </form>
+        <p>Nickname: {{ profile.nickname }}</p>
+        <p>Payment Method ID: {{ profile.payment_method_id }}</p>
     </main>
 </body>
 </html>
