@@ -3,27 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - BakaiBank</title>
+    <title>Login</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <header>
-        <h1>BakaiBank</h1>
+        <h1>Login</h1>
     </header>
     <main>
-        <section id="auth-content">
-            <h2>Login</h2>
-            <form id="login-form">
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit">Login</button>
-            </form>
-        </section>
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
     </main>
-    <footer>
-        <p>&copy; 2023 BakaiBank</p>
-    </footer>
-    <script src="{% static 'js/auth.js' %}"></script>
 </body>
 </html>

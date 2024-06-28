@@ -11,5 +11,11 @@ class ClientProfileForm(forms.ModelForm):
         model = ClientProfile
         fields = ['nickname']
 
+    def clean_nickname(self):
+        nickname = self.cleaned_data.get('nickname')
+        if ClientProfile.objects.filter(nickname=nickname).exists():
+            raise forms.ValidationError('Nickname already exists.')
+        return nickname
+
 class PaymentMethodForm(forms.Form):
     payment_method_id = forms.CharField(max_length=255, required=True)

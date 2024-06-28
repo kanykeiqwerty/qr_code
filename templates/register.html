@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register as {{ role }}</title>
+    <title>Register</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <header>
-        <h1>Register as {{ role }}</h1>
+        <h1>Register</h1>
     </header>
     <main>
-        <form id="register-form" method="post">
+        <form method="post" action="{% url 'register' %}">
             {% csrf_token %}
-            <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
-            <input type="password" name="password2" placeholder="Confirm Password" required><br>
-            <input type="hidden" name="user_type" value="{{ role }}">
+            <input type="hidden" name="role" value="{{ role }}">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <label for="password2">Confirm Password:</label>
+            <input type="password" id="password2" name="password2" required>
             <button type="submit">Register</button>
         </form>
     </main>
-    <script src="{% static 'js/auth.js' %}"></script>
-</body>
-</html>
+</bo

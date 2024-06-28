@@ -1,3 +1,4 @@
+from venv import logger
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 import uuid
@@ -29,6 +30,8 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **kwargs)
 
 class CustomUser(AbstractUser):
+
+    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = None
     email = models.EmailField('email address', unique=True)
     user_type = models.CharField(max_length=10, choices=(('client', 'Client'), ('waiter', 'Waiter')))
@@ -55,6 +58,7 @@ class WaiterProfile(models.Model):
         return f"{self.first_name} {self.last_name}"
 
     def save(self, *args, **kwargs):
+        logger.debug("Saving WaiterProfile for user: %s", self.user.email)
         if not self.qr_code:
             qr_content = f"{settings.SITE_URL}/make-tip/{self.user.id}/"
             qr_image = qrcode.make(qr_content)
@@ -63,6 +67,7 @@ class WaiterProfile(models.Model):
             qr_file_name = f"{self.user.id}_qrcode.png"
             self.qr_code.save(qr_file_name, File(qr_offset), save=False)
         super().save(*args, **kwargs)
+        
 class ClientProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
     nickname = models.CharField(max_length=100, unique=True)

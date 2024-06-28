@@ -6,16 +6,41 @@
     <title>Complete Waiter Profile</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        header {
+            margin-bottom: 20px;
+        }
+        main {
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form label, form input, form button {
+            margin: 5px;
+        }
+    </style>
 </head>
-<body style="background-color: lightblue;">
+<body>
     <header>
-        <h1>Complete Waiter Profile</h1>
+        <h1>BAKAIBANK</h1>
     </header>
     <main>
-        <form method="post">
+        <h2>Заполните пустые ячейки</h2>
+        <form method="post" action="{% url 'complete-waiter-profile' %}">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit">Save</button>
+            <button type="submit">Сохранить</button>
         </form>
     </main>
 </body>
