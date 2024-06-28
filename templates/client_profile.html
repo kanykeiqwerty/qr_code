@@ -4,37 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Profile</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
-            margin: 0;
         }
+
         header {
-            margin-bottom: 20px;
+            background-color: #333;
+            color: white;
+            padding: 1em;
+            text-align: center;
+            width: 100%;
         }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
         main {
             text-align: center;
+            background-color: #fff;
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            margin-top: 20px;
         }
+
         .profile-info {
             margin: 10px 0;
+            font-size: 1.2em;
+        }
+
+        .profile-info p {
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+
+        .cards-container {
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: #d3d3d3;
+            padding: 1em;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            text-align: left;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>BAKAIBANK</h1>
+        <h1>BakaiBank</h1>
     </header>
     <main>
         <h2>Профиль клиента</h2>
         <div class="profile-info">
             <p><strong>Nickname:</strong> {{ profile.nickname }}</p>
-            <p><strong>Payment Method ID:</strong> {{ profile.payment_method_id }}</p>
+        </div>
+        <div class="cards-container">
+            <h3>Bank Cards</h3>
+            {% for card in profile.user.paymentmethod_set.all %}
+                <div class="card">
+                    <p><strong>Card Type:</strong> {{ card.card_type }}</p>
+                    <p><strong>Card Number:</strong> **** **** **** {{ card.card_number|slice:"-4:" }}</p>
+                    <p><strong>Expiration Date:</strong> {{ card.expiration_date }}</p>
+                </div>
+            {% empty %}
+                <p>No linked cards.</p>
+            {% endfor %}
         </div>
     </main>
 </body>

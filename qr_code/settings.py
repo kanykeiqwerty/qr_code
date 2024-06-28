@@ -52,8 +52,8 @@ INSTALLED_APPS = [
     
 ]
 
-STRIPE_SECRET_KEY = 'your_secret_key'
-STRIPE_PUBLISHABLE_KEY = 'your_publishable_key'
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'your_stripe_secret_key')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', 'your_stripe_publishable_key')
 stripe.api_key=STRIPE_SECRET_KEY
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

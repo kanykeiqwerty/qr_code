@@ -1,22 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attach Payment Method</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body style="background-color: lightblue;">
-    <header>
-        <h1>Attach Payment Method</h1>
-    </header>
-    <main>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Save</button>
-        </form>
-    </main>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Attach Payment Method{% endblock %}
+
+{% block content %}
+<h2>Attach Payment Method</h2>
+<form method="post" action="{% url 'attach-payment-method' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Attach Card</button>
+</form>
+{% endblock %}

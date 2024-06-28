@@ -36,7 +36,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField('email address', unique=True)
     user_type = models.CharField(max_length=10, choices=(('client', 'Client'), ('waiter', 'Waiter')))
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
-    payment_method_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_payment_method_id = models.CharField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -53,6 +53,7 @@ class WaiterProfile(models.Model):
     workplace = models.CharField(max_length=255)
     goal = models.TextField(blank=True, null=True)
     qr_code = models.ImageField(upload_to='qrcodes/', blank=True, null=True)
+    photo = models.ImageField(upload_to='photos/', blank=True, null=True) 
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -86,3 +87,14 @@ class Tip(models.Model):
 
     def __str__(self):
         return f"Tip from {self.client.nickname} to {self.waiter.user.email} - {self.amount}"
+
+
+class PaymentMethod(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    card_number = models.CharField(max_length=16)
+    card_type = models.CharField(max_length=50)
+    expiration_date = models.CharField(max_length=5)
+    cvc = models.CharField(max_length=3)
+
+    def __str__(self):
+        return f"{self.card_type} ending in {self.card_number[-4:]}"

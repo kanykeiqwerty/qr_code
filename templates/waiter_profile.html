@@ -4,45 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Waiter Profile</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
-            margin: 0;
         }
+
         header {
-            margin-bottom: 20px;
+            background-color: #333;
+            color: white;
+            padding: 1em;
+            text-align: center;
+            width: 100%;
         }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
         main {
             text-align: center;
+            background-color: #fff;
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
+        .profile-photo {
+            margin-bottom: 20px;
+        }
+
         .profile-info {
             margin: 10px 0;
+            font-size: 1.2em;
         }
+
+        .profile-info p {
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+
         img {
-            margin-top: 10px;
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .photo-container {
+            width: 225px;
+            height: 300px;
+            background-color: #d3d3d3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            border-radius: 10px;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .qr-button {
+            padding: 0.5em 2em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .qr-button:hover {
+            background-color: #0056b3;
+        }
+
+        .qr-container {
+            width: 300px;
+            height: 300px;
+            background-color: #d3d3d3;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .qr-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
         }
     </style>
+    <script>
+        function toggleQRCode() {
+            var qrContainer = document.getElementById('qr-container');
+            if (qrContainer.style.display === 'flex') {
+                qrContainer.style.display = 'none';
+            } else {
+                qrContainer.style.display = 'flex';
+            }
+        }
+    </script>
 </head>
 <body>
     <header>
-        <h1>BAKAIBANK</h1>
+        <h1>BakaiBank</h1>
     </header>
     <main>
         <h2>Профиль официанта</h2>
-        <div class="profile-info">
-            <p><strong>First Name:</strong> {{ profile.first_name }}</p>
-            <p><strong>Last Name:</strong> {{ profile.last_name }}</p>
-            <p><strong>Workplace:</strong> {{ profile.workplace }}</p>
-            <p><strong>Goal:</strong> {{ profile.goal }}</p>
+        <div class="profile-wrapper">
+            <div>
+                <div class="photo-container">
+                    {% if profile.photo %}
+                        <img src="{{ profile.photo.url }}" alt="Employee Photo">
+                    {% else %}
+                        <p>No photo available.</p>
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+                    <p><strong>First Name:</strong> {{ profile.first_name }}</p>
+                    <p><strong>Last Name:</strong> {{ profile.last_name }}</p>
+                    <p><strong>Workplace:</strong> {{ profile.workplace }}</p>
+                    <p><strong>Goal:</strong> {{ profile.goal }}</p>
+                </div>
+                <button class="qr-button" onclick="toggleQRCode()">Toggle QR Code</button>
+            </div>
+            <div id="qr-container" class="qr-container">
+                {% if profile.qr_code %}
+                    <img src="{{ profile.qr_code.url }}" alt="QR Code">
+                {% else %}
+                    <p>No QR code available.</p>
+                {% endif %}
+            </div>
         </div>
-        <p><strong>QR Code:</strong></p>
-        <img src="{{ profile.qr_code.url }}" alt="QR Code">
     </main>
 </body>
 </html>

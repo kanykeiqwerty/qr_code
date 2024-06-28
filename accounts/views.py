@@ -84,6 +84,7 @@ class ProfileView(APIView):
         else:
             user = get_object_or_404(CustomUser, id=user_id)
         if user.user_type == 'waiter':
+            
             profile = WaiterProfile.objects.get(user=user)
             return render(request, 'waiter_profile.html', {'profile': profile})
         elif user.user_type == 'client':
